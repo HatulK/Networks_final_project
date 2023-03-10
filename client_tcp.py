@@ -25,3 +25,25 @@ print(f"Received response: {data.decode('utf-8')}")
 # close the connection
 client_socket.close()
 print("Connection closed")
+
+import socket
+
+# create a TCP/IP socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# connect the socket to the port where the server is listening
+server_address = ('localhost', 10000)
+sock.connect(server_address)
+
+# send a message to the server
+message = 'transfer_player\nLionel Messi\nPSG\n'
+sock.sendall(message.encode())
+
+# receive the response from the server
+data = sock.recv(1024)
+
+# print the response
+print(data.decode())
+
+# close the socket
+sock.close()

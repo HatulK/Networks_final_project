@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import create_engine
 from sqlalchemy.future import engine
 from sqlalchemy.orm import sessionmaker
@@ -234,16 +236,93 @@ def playing_together(player1_id, player2_id):
     return False
 
 
-def handle_request(client_sock, message) -> None:
-    match str(message.func):
-        case "get_all":
-            print("--this is the all players--")
-            try:
-                ans = get_all()
-                send_msg(client_sock, ans)
+def handle_request(client_sock, message):
+    request = message.decode('utf-8').strip()
 
-            except ValueError:
-                send_Error(client_sock, error_message):
+    # Get all players
+    if request == "get_all_players":
+        result = db_session.query(Players).all()
+        response = ""
+        for player in result:
+            response += str(player) + "\n"
+        client_sock.send(response.encode('utf-8'))
+
+    # Insert a new player
+    elif request.startswith("insert_player"):
+        try:
+            _, id, name, team, league, national, position, goals, assists, age = request.split(" ")
+            insert_player(id, name, team, league, national, position, goals, assists, age)
+            response = f"Player {name} added to the database with ID {id}"
+        except:
+            response = "Invalid input. Please provide all player details separated by spaces."
+        client_sock.send(response.encode('utf-8'))
+
+    # Delete a player by name
+    elif request.startswith("delete_player"):
+        try:
+            _, name = request.split(" ")
+            delete_player_by_name(name)
+            response = f"Player {name} deleted successfully."
+        except:
+            response = "Invalid input. Please provide the name of the player to delete."
+        client_sock.send(response.encode('utf-8'))
+
+    # Update player's goals
+    elif request.startswith("update_goals"):
+        try:
+            _, name, new_goals = request.split(" ")
+            update_player_goals(name, new_goals)
+            response = f"Goals for player {name} updated to {new_goals}"
+        except:
+            response = "Invalid input. Please provide the name of the player and the new number of goals."
+        client_sock.send(response.encode('utf-8'))
+
+    # Update player's assists
+    elif request.startswith("update_assists"):
+        try:
+            _, name, new_assists = request.split(" ")
+            update_player_assists(name, new_assists)
+            response = f"Assists for player {name} updated to {new_assists}"
+        except:
+            response = "Invalid input. Please provide the name of the player and the new number of assists."
+        client_sock.send(response.encode('utf-8'))
+
+    # Find player by ID
+    elif request.startswith("find_player"):
+        try:
+            _, player_id = request.split(" ")
+            player = get_player_by_id(player_id)
+            if player:
+                response = f"Player {player.name} found in the database"
+            else:
+                response = f"Player with ID {player_id} not found in the database"
+        except:
+            response = "Invalid input. Please provide the ID of the player to find."
+        client_sock.send(response.encode('utf-8'))
+
+    # Transfer player to new team
+    elif request.startswith("transfer_player"):
+        try:
+            _, name, new_team = request.split(" ")
+            transfer_player(name, new_team)
+            response = f"Player {name} has been transferred to {new_team}"
+        except:
+            response = "Invalid input. Please provide the name of the player and the name of the new team."
+        client_sock.send(response.encode('utf-8'))
+
+    # Get total goals involvement of a player
+    elif request.startswith("goals_involvement"):
+        try:
+            _, player1_id = request.split(" ")
+            sum = get_goals_involvement(player1_id)
+            response = f"Player with ID {player1_id} was involved in {sum} goals"
+        except:
+            response = "Invalid input. Please provide the ID of the player."
+        client_sock.send(response.encode('utf-8'))
+
+
+
+
 
 if __name__ == '__main__':
     cdb()
