@@ -1,5 +1,5 @@
 import json
-
+from shared import *
 from sqlalchemy import create_engine
 from sqlalchemy.future import engine
 from sqlalchemy.orm import sessionmaker
@@ -9,51 +9,37 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.orm import sessionmaker
 from sql import Base
 from sql import Players
-
 import socket
 
-# create a socket object
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+buffer = 1024
+def start_server():
+    # create a socket object
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-# get local machine name
-host = socket.gethostname()
+    host = "10.0.2.15"
+    # set a port number
+    port = 30247
 
-# set a port number
-port = 12345
+    # bind the socket to a public host and a port
+    server_socket.bind((host, port))
+    print(f"Socket bound to host {host} on port {port}")
 
-# bind the socket to a public host and a port
-server_socket.bind((host, port))
-print(f"Socket bound to host {host} on port {port}")
+    # listen for incoming connections
+    server_socket.listen(5)
+    print("Waiting for incoming connections...")
 
-# listen for incoming connections
-server_socket.listen(5)
-print("Waiting for incoming connections...")
-
-while True:
-    # accept a client connection
-    client_sock, addr = server_socket.accept()
-    print(f"Accepted connection from {addr}")
-
-    # receive data from the client
-    data = client_sock.recv(1024)
-    print(f"Received data: {data.decode('utf-8')}")
-
-    # send a response back to the client
-    response = "Thank you for connecting!"
-    client_sock.sendall(response.encode('utf-8'))
-
-    # close the client connection
-    client_sock.close()
-    print(f"Connection with {addr} closed")
-    choice = input()
-    if choice == 0:
-        print("---you decide to close the connection---")
-        break
-    else:
-        continue
+    while True:
+        # accept a client connection
+        client_sock, addr = server_socket.accept()
+        print(f"Accepted connection from {addr}")
+        while True:
+            message = client_sock.recv(buffer)
+            print(message.decode())
+            handle_request(client_sock, message)
 
 
-def send_msg(client_sock, message):
+def ori_send_msg(client_sock, message):
     client_sock.sendall(message.encode('utf-8'))
     print(f"Sent message: {message}")
 
@@ -131,15 +117,13 @@ def cdb():
 
 def get_all():
     result = db_session.query(Players).all()
-    for player in result:
-        print(player)
     return result
 
 
-def insert_player(id, name, team, league, national, position, goals, assists, age):
+def insert_player(name, team, league, national, position, goals, assists):
     global db_session
-    new_player = Players(id=id, name=name, team=team, league=league, national=national, position=position, goals=goals,
-                         assists=assists, age=age)
+    new_player = Players(name=name, team=team, league=league, national=national, position=position, goals=goals,
+                         assists=assists)
     db_session.add(new_player)
     db_session.commit()
     print(f"Player {name} added to the database with ID {id}")
@@ -159,7 +143,7 @@ def delete_player_by_name(name):
         print(f"Player {name} not found in the database.")
 
 
-# update the number of asists for the player
+# update the number of assists for the player
 def update_player_goals(name, new_goals):
     global db_session
     player = db_session.query(Players).filter_by(name=name).first()
@@ -229,38 +213,39 @@ def get_squad_team(team):
 
 # chack if this two players  play together
 def playing_together(player1_id, player2_id):
-    plyaer1 = get_player_by_id(player1_id)
+    player1 = get_player_by_id(player1_id)
     player2 = get_player_by_id(player2_id)
-    if plyaer1.team == player2.team:
+    if player1.team == player2.team:
         return True
     return False
 
 
 def handle_request(client_sock, message):
     request = message.decode('utf-8').strip()
-
     # Get all players
     if request == "get_all_players":
-        result = db_session.query(Players).all()
+        result = get_all()
         response = ""
         for player in result:
             response += str(player) + "\n"
-        client_sock.send(response.encode('utf-8'))
+        client_sock.send(response.encode())
 
     # Insert a new player
     elif request.startswith("insert_player"):
         try:
-            _, id, name, team, league, national, position, goals, assists, age = request.split(" ")
-            insert_player(id, name, team, league, national, position, goals, assists, age)
+            _, name, team, league, national, position, goals, assists = request.split("-")
+            print(name,team,league,national,position,goals,assists)
+            insert_player(name, team, league, national, position, goals, assists)
             response = f"Player {name} added to the database with ID {id}"
+
         except:
-            response = "Invalid input. Please provide all player details separated by spaces."
+            response = "Invalid input. Please provide all player details separated by -."
         client_sock.send(response.encode('utf-8'))
 
     # Delete a player by name
     elif request.startswith("delete_player"):
         try:
-            _, name = request.split(" ")
+            _, name = request.split("-")
             delete_player_by_name(name)
             response = f"Player {name} deleted successfully."
         except:
@@ -270,7 +255,7 @@ def handle_request(client_sock, message):
     # Update player's goals
     elif request.startswith("update_goals"):
         try:
-            _, name, new_goals = request.split(" ")
+            _, name, new_goals = request.split("-")
             update_player_goals(name, new_goals)
             response = f"Goals for player {name} updated to {new_goals}"
         except:
@@ -280,7 +265,7 @@ def handle_request(client_sock, message):
     # Update player's assists
     elif request.startswith("update_assists"):
         try:
-            _, name, new_assists = request.split(" ")
+            _, name, new_assists = request.split("-")
             update_player_assists(name, new_assists)
             response = f"Assists for player {name} updated to {new_assists}"
         except:
@@ -290,7 +275,7 @@ def handle_request(client_sock, message):
     # Find player by ID
     elif request.startswith("find_player"):
         try:
-            _, player_id = request.split(" ")
+            _, player_id = request.split("-")
             player = get_player_by_id(player_id)
             if player:
                 response = f"Player {player.name} found in the database"
@@ -303,7 +288,7 @@ def handle_request(client_sock, message):
     # Transfer player to new team
     elif request.startswith("transfer_player"):
         try:
-            _, name, new_team = request.split(" ")
+            _, name, new_team = request.split("-")
             transfer_player(name, new_team)
             response = f"Player {name} has been transferred to {new_team}"
         except:
@@ -319,28 +304,28 @@ def handle_request(client_sock, message):
         except:
             response = "Invalid input. Please provide the ID of the player."
         client_sock.send(response.encode('utf-8'))
-
-
-
-
+    elif request.startswith("get_squad_national"):
+        try:
+            _,nation = request.split("-")
+            response = get_squad_national(nation)
+        except:
+            response="No such nation"
+        client_sock.send(response.encode('utf-8'))
+    elif request.startswith("get_squad_team"):
+        try:
+            _,team = request.split("-")
+            response = get_squad_team(team)
+        except:
+            response="No such team"
+        client_sock.send(response.encode('utf-8'))
+    elif request.startswith("playing_together"):
+        try:
+            _,p1,p2 = request.split("-")
+            response = playing_together(p1,p2)
+        except:
+            response="No such player"
+        client_sock.send(response.encode('utf-8'))
 
 if __name__ == '__main__':
     cdb()
-    results = get_all()
-    # tog = playing_together(6,7)
-    # print(tog)
-    # sum = get_goals_involvement(6)
-    # print(sum)
-    # transfer_player("Kylian Mbappe",'Maccabi Tel aviv')
-    # maccabi_squad = get_squad_team('Maccabi Tel aviv')
-    # print(maccabi_squad)
-    # delete_player_by_name('Virgil van Dijk')
-    # results = get_all()
-    sum = get_goals_involvement(2)
-    print(sum)
-    update_player_goals('Eran Zahavi', 16)
-    num = get_goals_involvement(2)
-    print(num)
-    update_player_assists('Eran Zahavi', 5)
-    num = get_goals_involvement(2)
-    print(num)
+    start_server()
