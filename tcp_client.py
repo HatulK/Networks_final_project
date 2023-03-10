@@ -70,9 +70,26 @@ def client_handle_request(client_socket):
             client_socket.send(s.encode())
         if choice==8:
             s="goals_involvement-"
-            print("Please enter player's name.")
+            print("Please enter player's ID.")
+            s+=input()
+            client_socket.send(s.encode())
+        if choice==9:
+            s="get_squad_national-"
+            print("Enter the nation of the squad you wish.")
+            s+=input()
+            client_socket.send(s.encode())
+        if choice==10:
+            s="get_squad_team-"
+            print("Enter team name")
+            s+=input()
+            client_socket.send(s.encode())
+        if choice==11:
+            s="playing_together-"
+            print("Please enter player1 name")
             s+=input()+"-"
-
+            print("Please enter player2 name")
+            s += input()
+            client_socket.send(s.encode())
 
 
         result = receive_share(client_socket)
