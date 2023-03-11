@@ -15,12 +15,8 @@ def send_share(sock,data):
 def receive_share(sock):
     received_data = b''
     while True:
-        i=0
-        i+=1
-        print(i)
         chunk = sock.recv(buffer)
         if not chunk:
-            print("NOT")
             break
         received_data += chunk
         if len(chunk) < buffer:

@@ -59,7 +59,7 @@ def cdb():
 
     db_session.query(Players).delete()
 
-    c1 = Players(name="Oscar Gluch", team="Rbz", league="Austria BL", national="Israel", position="CAM",
+    c1 = Players(name="Oscar Gluch", team="Rbz", league="Austria BL", national="Israel", position="ATT",
                  goals=6,
                  assists=4)
     db_session.add(c1)
@@ -67,50 +67,48 @@ def cdb():
 
     db_session.add_all(
         [
-            Players(name="Eran Zahavi", team="Maccabi Tel aviv", league="La liga", national="Israel", position="ST",
+            Players(name="Eran Zahavi", team="Maccabi Tel aviv", league="La liga", national="Israel", position="ATT",
                     goals=15,
                     assists=4),
-            Players(name="Dor Perez", team="Maccabi Tel aviv", league="La liga", national="Israel", position="CAM",
+            Players(name="Dor Perez", team="Maccabi Tel aviv", league="La liga", national="Israel", position="MID",
                     goals=2,
                     assists=3),
             Players(name="Lionel Messi", team="Paris Saint-Germain", league="Ligue 1", national="Argentina",
-                    position="FW", goals=18, assists=8),
+                    position="ATT", goals=18, assists=8),
             Players(name="Cristiano Ronaldo", team="Manchester United", league="Premier League",
-                    national="Portugal", position="FW", goals=13, assists=4),
+                    national="Portugal", position="ATT", goals=13, assists=4),
             Players(name="Kylian Mbappe", team="Paris Saint-Germain", league="Ligue 1", national="France",
-                    position="FW", goals=17, assists=8),
+                    position="ATT", goals=17, assists=8),
             Players(name="Robert Lewandowski", team="Bayern Munich", league="Bundesliga", national="Poland",
-                    position="FW", goals=27, assists=6),
+                    position="ATT", goals=27, assists=6),
             Players(name="Erling Haaland", team="Borussia Dortmund", league="Bundesliga", national="Norway",
-                    position="FW", goals=19, assists=5),
+                    position="ATT", goals=19, assists=5),
             Players(name="Kevin De Bruyne", team="Manchester City", league="Premier League", national="Belgium",
-                    position="MF", goals=5, assists=11),
+                    position="MID", goals=5, assists=11),
             Players(name="N'Golo Kante", team="Chelsea", league="Premier League", national="France",
-                    position="MF", goals=1, assists=2),
+                    position="MID", goals=1, assists=2),
             Players(name="Karim Benzema", team="Real Madrid", league="La Liga", national="France",
-                    position="FW", goals=17, assists=7),
+                    position="ATT", goals=17, assists=7),
             Players(name="Mohamed Salah", team="Liverpool", league="Premier League", national="Egypt",
-                    position="FW", goals=16, assists=4),
+                    position="ATT", goals=16, assists=4),
             Players(name="Sadio Mane", team="Liverpool", league="Premier League", national="Senegal",
-                    position="FW", goals=8, assists=3),
+                    position="ATT", goals=8, assists=3),
             Players(name="Gareth Bale", team="Tottenham Hotspur", league="Premier League", national="Wales",
-                    position="FW", goals=7, assists=2),
+                    position="ATT", goals=7, assists=2),
             Players(name="Son Heung-min", team="Tottenham Hotspur", league="Premier League",
-                    national="South Korea", position="FW", goals=12, assists=5),
+                    national="South Korea", position="ATT", goals=12, assists=5),
             Players(name="Virgil van Dijk", team="Liverpool", league="Premier League", national="Netherlands",
-                    position="DF", goals=0, assists=0),
+                    position="DEF", goals=0, assists=0),
             Players(name="Ruben Dias", team="Manchester City", league="Premier League", national="Portugal",
-                    position="DF", goals=1, assists=0),
+                    position="DEF", goals=1, assists=0),
             Players(name="Jan Oblak", team="Atletico Madrid", league="La Liga", national="France", position="GK",
                     goals=0, assists=0),
-
-            Players(name="Serge Gnabry", team="Bayern Munich", league="Bundesliga", national="Germany", position="RW",
+            Players(name="Serge Gnabry", team="Bayern Munich", league="Bundesliga", national="Germany", position="ATT",
                     goals=5, assists=2),
-            Players(name="Lautaro Martinez", team="Inter Milan", league="Serie A", national="Argentina", position="ST",
+            Players(name="Lautaro Martinez", team="Inter Milan", league="Serie A", national="Argentina", position="ATT",
                     goals=13, assists=3),
             Players(name="Pierre-Emerick Aubameyang", team="Arsenal", league="Premier League", national="Gabon",
-                    position="ST", goals=7, assists=1)
-
+                    position="ATT", goals=7, assists=1)
         ]
     )
 
@@ -126,18 +124,15 @@ def insert_player(name, team, league, national, position, goals, assists):
                          assists=assists)
     db_session.add(new_player)
     db_session.commit()
-    print(f"Player {name} added to the database with ID {id}")
+    print(f"Player {name} added to the database")
 
-
+#Delete by name
 def delete_player_by_name(name):
-    engine = create_engine('sqlite:///tcp.db', echo=False)
-    Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    player = session.query(Players).filter_by(name=name).first()
+    global db_session
+    player = db_session.query(Players).filter(Players.name.like(f'{name}%')).first()
     if player:
-        session.delete(player)
-        session.commit()
+        db_session.delete(player)
+        db_session.commit()
         print(f"Player {name} deleted successfully.")
     else:
         print(f"Player {name} not found in the database.")
@@ -146,7 +141,7 @@ def delete_player_by_name(name):
 # update the number of assists for the player
 def update_player_goals(name, new_goals):
     global db_session
-    player = db_session.query(Players).filter_by(name=name).first()
+    player = db_session.query(Players).filter(Players.name.like(f'{name}%')).first()
     if player:
         player.goals = new_goals
         db_session.commit()
@@ -158,7 +153,7 @@ def update_player_goals(name, new_goals):
 # update the number of asists for the player
 def update_player_assists(name, new_assists):
     global db_session
-    player = db_session.query(Players).filter_by(name=name).first()
+    player = db_session.query(Players).filter(Players.name.like(f'{name}%')).first()
     if player:
         player.assists = new_assists
         db_session.commit()
@@ -181,7 +176,7 @@ def get_player_by_id(player_id):
 # check the current team of the player
 def transfer_player(name, new_team):
     global db_session
-    player = db_session.query(Players).filter_by(name=name).first()
+    player = db_session.query(Players).filter(Players.name.like(f'{name}%')).first()
     if player:
         player.team = new_team
         db_session.commit()
@@ -190,9 +185,10 @@ def transfer_player(name, new_team):
         print(f"Player {name} not found in the database")
 
 
-# return the number of the times that the player was invoved in goal
-def get_goals_involvement(player1_id):
-    player = get_player_by_id(player1_id)
+# return the number of the times that the player was involved in goal
+def get_goals_involvement(name):
+    global db_session
+    player = db_session.query(Players).filter(Players.name.like(f'{name}%')).first()
     sum = player.goals + player.assists
     return sum
 
@@ -200,24 +196,34 @@ def get_goals_involvement(player1_id):
 # return the full squad of every national team
 def get_squad_national(national):
     global db_session
-    players = db_session.query(Players).filter_by(national=national).all()
+    players = db_session.query(Players).filter(Players.national.like(f'{national}%')).all()
     return players
 
 
 # return the full squad of every  team
 def get_squad_team(team):
     global db_session
-    players = db_session.query(Players).filter_by(team=team).all()
+    players = db_session.query(Players).filter(Players.team.like(f'{team}%')).all()
     return players
 
 
 # chack if this two players  play together
-def playing_together(player1_id, player2_id):
-    player1 = get_player_by_id(player1_id)
-    player2 = get_player_by_id(player2_id)
+def playing_together(p1, p2):
+    player1=player = db_session.query(Players).filter(Players.name.like(f'{p1}%')).first()
+    player2 = player = db_session.query(Players).filter(Players.name.like(f'{p2}%')).first()
     if player1.team == player2.team:
-        return True
-    return False
+        return "They are playing together\n"
+    return "They are not playing together\n"
+
+def get_all_players_by_position(position):
+    global db_session
+    players = db_session.query(Players).filter(Players.position.like(f'{position}%')).all()
+    return players
+
+def get_players_by_goals(number):
+    global db_session
+    players = db_session.query(Players).filter(Players.goals>=number).all()
+    return players
 
 
 def handle_request(client_sock, message):
@@ -229,19 +235,17 @@ def handle_request(client_sock, message):
         for player in result:
             response += str(player) + "\n"
         client_sock.send(response.encode())
-
     # Insert a new player
     elif request.startswith("insert_player"):
         try:
             _, name, team, league, national, position, goals, assists = request.split("-")
             print(name,team,league,national,position,goals,assists)
             insert_player(name, team, league, national, position, goals, assists)
-            response = f"Player {name} added to the database with ID {id}"
+            response = f"Player {name} added to the database "
 
         except:
             response = "Invalid input. Please provide all player details separated by -."
         client_sock.send(response.encode('utf-8'))
-
     # Delete a player by name
     elif request.startswith("delete_player"):
         try:
@@ -251,7 +255,6 @@ def handle_request(client_sock, message):
         except:
             response = "Invalid input. Please provide the name of the player to delete."
         client_sock.send(response.encode('utf-8'))
-
     # Update player's goals
     elif request.startswith("update_goals"):
         try:
@@ -261,7 +264,6 @@ def handle_request(client_sock, message):
         except:
             response = "Invalid input. Please provide the name of the player and the new number of goals."
         client_sock.send(response.encode('utf-8'))
-
     # Update player's assists
     elif request.startswith("update_assists"):
         try:
@@ -271,7 +273,6 @@ def handle_request(client_sock, message):
         except:
             response = "Invalid input. Please provide the name of the player and the new number of assists."
         client_sock.send(response.encode('utf-8'))
-
     # Find player by ID
     elif request.startswith("find_player"):
         try:
@@ -284,7 +285,6 @@ def handle_request(client_sock, message):
         except:
             response = "Invalid input. Please provide the ID of the player to find."
         client_sock.send(response.encode('utf-8'))
-
     # Transfer player to new team
     elif request.startswith("transfer_player"):
         try:
@@ -294,36 +294,66 @@ def handle_request(client_sock, message):
         except:
             response = "Invalid input. Please provide the name of the player and the name of the new team."
         client_sock.send(response.encode('utf-8'))
-
     # Get total goals involvement of a player
     elif request.startswith("goals_involvement"):
         try:
-            _, player1_id = request.split(" ")
-            sum = get_goals_involvement(player1_id)
-            response = f"Player with ID {player1_id} was involved in {sum} goals"
+            _, name = request.split("-")
+            sum = get_goals_involvement(name)
+            response = f"{name} is involved in {sum} goals"
         except:
             response = "Invalid input. Please provide the ID of the player."
         client_sock.send(response.encode('utf-8'))
+    #Get all players belong to this national
     elif request.startswith("get_squad_national"):
         try:
             _,nation = request.split("-")
-            response = get_squad_national(nation)
+            result = get_squad_national(nation)
+            response = ""
+            for player in result:
+                response += str(player) + "\n"
         except:
             response="No such nation"
         client_sock.send(response.encode('utf-8'))
+    #Get all players from the team
     elif request.startswith("get_squad_team"):
         try:
             _,team = request.split("-")
-            response = get_squad_team(team)
+            result = get_squad_team(team)
+            response = ""
+            for player in result:
+                response += str(player) + "\n"
         except:
             response="No such team"
         client_sock.send(response.encode('utf-8'))
+    #Check if two players playing in the same team
     elif request.startswith("playing_together"):
         try:
             _,p1,p2 = request.split("-")
             response = playing_together(p1,p2)
         except:
-            response="No such player"
+            response="No such player\s"
+        client_sock.send(response.encode('utf-8'))
+    #Get all players by position
+    elif request.startswith("get_all_players_by_position"):
+        try:
+            _, pos = request.split("-")
+            result = get_all_players_by_position(pos)
+            response = ""
+            for player in result:
+                response += str(player) + "\n"
+        except:
+            response = "No such position"
+        client_sock.send(response.encode('utf-8'))
+    #Get all players with more than X goals.
+    elif request.startswith("get_players_by_goals"):
+        try:
+            _, num = request.split("-")
+            result = get_players_by_goals(num)
+            response = ""
+            for player in result:
+                response += str(player) + "\n"
+        except:
+            response = "No such players"
         client_sock.send(response.encode('utf-8'))
 
 if __name__ == '__main__':
