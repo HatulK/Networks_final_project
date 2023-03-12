@@ -2,17 +2,25 @@ from scapy.all import *
 from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.layers.inet import IP, UDP
 from scapy.layers.l2 import Ether
-
+# Define some variables
 client_ip = "192.168.1.100"
 server_ip = "192.168.1.1"
 broad_cast = "255.255.255.255"
 
+
+# Function to handle incoming DHCP packets
 def handle_dhcp(packet):
+    # Wait for 1 second before processing the packet
     time.sleep(1)
+    # Extract the MAC address of the client
     client_mac = packet[Ether].src
+    # Get the MAC address of the server's network interface
     server_mac = get_if_hwaddr("enp0s3")
+    # Define the subnet mask for the client
     subnet_mask = "255.255.255.0"
+    # Extract the transaction ID from the packet
     xid = packet[BOOTP].xid
+
     # Handle DHCP discovers from the client
     if DHCP in packet and packet[DHCP].options[0][1] == 1:
 
