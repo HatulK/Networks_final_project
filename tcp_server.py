@@ -1,4 +1,3 @@
-import json
 from shared import *
 from sqlalchemy import create_engine
 from sqlalchemy.future import engine
@@ -181,8 +180,7 @@ def transfer_player(name, new_team):
     if player:
         player.team = new_team
         db_session.commit()
-        print(f"Player {name} has been transferred to {new_team}")
-        return player
+        return f"Player {name} has been transferred to {new_team}"
     else:
         return f"Player do not exist."
 
@@ -317,7 +315,7 @@ def handle_request(client_sock):
             try:
                 _, name = request.split("-")
                 sum = get_goals_involvement(name)
-                response8 = sum
+                response8 = f"{name} is involved in {sum} goals"
             except:
                 response8 = "Invalid input. Please provide the ID of the player."
             client_sock.send(response8.encode('utf-8'))

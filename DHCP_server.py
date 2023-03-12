@@ -1,6 +1,3 @@
-# Create a DHCP offer packet
-import time
-
 from scapy.all import *
 from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.layers.inet import IP, UDP
