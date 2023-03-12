@@ -1,5 +1,3 @@
-import time
-
 from scapy.all import *
 from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.layers.inet import IP, UDP
@@ -49,9 +47,3 @@ def handle_dhcp(packet):
         print("----------ACK Received----------")
         my_ip = packet[BOOTP].yiaddr
         print(my_ip)
-
-
-if __name__ == '__main__':
-    print("i send discover")
-    discover()
-    sniff(filter="udp and (port 67 or 68)", prn=handle_dhcp, iface="enp0s3", count=3)

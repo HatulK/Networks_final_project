@@ -30,8 +30,8 @@ class Players(Base):
         return f"Players(name='{self.name}'id='{self.id}, team='{self.team}', league='{self.league}', national='{self.national}', position='{self.position}', goals={self.goals}, assists={self.assists})"
 
 
-def __str__(self):
-    return f"Player ID: {self.id}\nName: {self.name}\nTeam: {self.team}\nLeague: {self.league}\nNational: {self.national}\nPosition: {self.position}\nGoals: {self.goals}\nAssists: {self.assists}"
+    def __str__(self):
+        return f"Player ID: {self.id} Name: {self.name} Team: {self.team} League: {self.league} National: {self.national} Position: {self.position} Goals: {self.goals} Assists: {self.assists}\n"
 
 
 if __name__ == '__main__':

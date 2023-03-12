@@ -41,4 +41,5 @@ def handle_dhcp(packet):
         sendp(ack_packet, iface="enp0s3")
 
 if __name__ == '__main__':
+    print("DHCP Server is up \n")
     sniff(filter="udp and (port 67 or 68)", prn=handle_dhcp, iface="enp0s3")

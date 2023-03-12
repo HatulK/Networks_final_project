@@ -1,6 +1,6 @@
 import socket
 
-from tcp_server import buffer
+buffer=1024
 
 
 def send_share(sock,data):

@@ -4,11 +4,6 @@ from shared import *
 
 from tcp_server import buffer
 
-app_server_ip =  "10.0.2.15"
-
-
-
-
 def client_handle_request(client_socket):
     while True:
         print(f"Select an option from the list (by number) and then press enter.")
@@ -44,7 +39,7 @@ def client_handle_request(client_socket):
                 s += input()
                 client_socket.send(s.encode())
                 result = receive_share(client_socket)
-                print(result)
+                print(f"Player added.\n")
             elif choice==3:
                 s="delete_player-"
                 print("Enter player's name to be deleted:")
@@ -132,18 +127,17 @@ def client_handle_request(client_socket):
                 print(result)
             elif choice==20 :
                 print("Thank you for using our program :)")
+                client_socket.send("exit".encode())
                 client_socket.close()
                 return
             else:
                 print("Invalid input, please try again.\n")
 
 
-def connect_client():
-    global app_server_ip
+def connect_client(ip):
     client_socket = socket.socket()
-    client_socket.connect((app_server_ip, 30247))
+    client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    client_socket.bind(('',20247))
+    client_socket.connect((ip, 30247))
     client_handle_request(client_socket)
-    # client_socket.close()
-
-if __name__ == '__main__':
-    connect_client()
+    client_socket.close()

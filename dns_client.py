@@ -1,3 +1,5 @@
+from time import sleep
+
 from scapy.all import *
 from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.layers.dns import DNS, DNSQR, DNSRR
@@ -14,6 +16,7 @@ app_server_ip = ""
 
 def dns_packet_Handle(packet):
     global app_server_ip
+    sleep(1)
     if IP in packet:
         ip_source = packet[IP].src
         ip_dest = packet[IP].dst
@@ -21,6 +24,10 @@ def dns_packet_Handle(packet):
             app_server_URL = packet[DNSRR].rrname.decode().rstrip(".")
             if app_server_URL == app_URL:
                 app_server_ip = packet[DNSRR].rdata
+
+def get_app_server_ip():
+    global app_server_ip
+    return app_server_ip
 
 
 def sendDNSRequest():
@@ -30,10 +37,3 @@ def sendDNSRequest():
     dns = DNS(rd=1, qd=dnsqr)  # fullfil
     packet = ip / udp / dns
     send(packet)
-
-
-if __name__ == '__main__':
-    sendDNSRequest()  # Sending a DNS packet request
-    sniff(filter=f"udp port 53 and src {dns_ip}", count=1, timeout=5, prn=dns_packet_Handle,
-          iface="enp0s3")  # Sniffing the requested answer
-    print("App server IP is : " + app_server_ip)
