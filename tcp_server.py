@@ -167,10 +167,9 @@ def get_player_by_id(player_id):
     global db_session
     player = db_session.query(Players).filter_by(id=player_id).first()
     if player:
-        print(f"Player {player.name} found in the database")
+        print(f"Player {player.name} found in the database\n")
         return player
     else:
-        print(f"Player with ID {player_id} not found in the database")
         return None
 
 
@@ -182,50 +181,69 @@ def transfer_player(name, new_team):
     if player:
         player.team = new_team
         db_session.commit()
-        return f"Player {name} has been transferred to {new_team}"
+        print(f"Player {name} has been transferred to {new_team}")
+        return player
     else:
-        return f"Player {name} not found in the database"
+        return f"Player do not exist."
 
 
 # return the number of the times that the player was involved in goal
 def get_goals_involvement(name):
     global db_session
     player = db_session.query(Players).filter(Players.name.like(f'{name}%')).first()
-    sum = player.goals + player.assists
-    return sum
+    if player:
+        sum = player.goals + player.assists
+        return sum
+    else:
+        return "Player not exist."
 
 
 # return the full squad of every national team
 def get_squad_national(national):
     global db_session
     players = db_session.query(Players).filter(Players.national.like(f'{national}%')).all()
-    return players
+    if players:
+        return players
+    else:
+        return "Nation not exist"
 
 
 # return the full squad of every  team
 def get_squad_team(team):
     global db_session
     players = db_session.query(Players).filter(Players.team.like(f'{team}%')).all()
-    return players
+    if players:
+        return players
+    else:
+        return "Team not exist"
 
 
 # chack if this two players  play together
 def playing_together(p1, p2):
     player1=player = db_session.query(Players).filter(Players.name.like(f'{p1}%')).first()
     player2 = player = db_session.query(Players).filter(Players.name.like(f'{p2}%')).first()
-    if player1.team == player2.team:
-        return "They are playing together\n"
-    return "They are not playing together\n"
+    if player1 and player2:
+        if player1.team == player2.team:
+            return "They are playing together\n"
+        return "They are not playing together\n"
+    else:
+        return "Player 1 or/and 2 do not exist."
 
 def get_all_players_by_position(position):
     global db_session
     players = db_session.query(Players).filter(Players.position.like(f'{position}%')).all()
-    return players
+    if players:
+        return players
+    else:
+        return "There is no such position"
 
 def get_players_by_goals(number):
     global db_session
     players = db_session.query(Players).filter(Players.goals>=number).all()
-    return players
+    if players:
+        return players
+    else:
+        return None
 
 
 def handle_request(client_sock):
@@ -236,127 +254,144 @@ def handle_request(client_sock):
         # Get all players
         if request == "get_all_players":
             result = get_all()
-            response = ""
+            response1 = ""
             for player in result:
-                response += str(player)
-            client_sock.send(response.encode())
+                response1 += str(player)
+            client_sock.send(response1.encode())
         # Insert a new player
         elif request.startswith("insert_player"):
             try:
                 _, name, team, league, national, position, goals, assists = request.split("-")
-                response = insert_player(name, team, league, national, position, goals, assists)
-                response=response.__str__()
+                response2 = insert_player(name, team, league, national, position, goals, assists)
+                response2=response2.__str__()
             except:
-                response = "Invalid input. Please provide all player details separated by -."
-            client_sock.send(response.encode('utf-8'))
+                response2 = "Invalid input. Please provide all player details separated by -."
+            client_sock.send(response2.encode('utf-8'))
         # Delete a player by name
         elif request.startswith("delete_player"):
             try:
                 _, name = request.split("-")
-                response = delete_player_by_name(name)
+                response3 = delete_player_by_name(name)
             except:
-                response = "Invalid input. Please provide the name of the player to delete."
-            client_sock.send(response.encode('utf-8'))
+                response3 = "Invalid input. Please provide the name of the player to delete."
+            client_sock.send(response3.encode('utf-8'))
         # Update player's goals
         elif request.startswith("update_goals"):
             try:
                 _, name, new_goals = request.split("-")
-                update_player_goals(name, new_goals)
-                response = f"Goals for player {name} updated to {new_goals}"
+
+                response4 =update_player_goals(name, new_goals)
             except:
-                response = "Invalid input. Please provide the name of the player and the new number of goals."
-            client_sock.send(response.encode('utf-8'))
+                response4 = "Invalid input. Please provide the name of the player and the new number of goals."
+            client_sock.send(response4.encode('utf-8'))
         # Update player's assists
         elif request.startswith("update_assists"):
             try:
                 _, name, new_assists = request.split("-")
-                update_player_assists(name, new_assists)
-                response = f"Assists for player {name} updated to {new_assists}"
+                response5 = update_player_assists(name, new_assists)
             except:
-                response = "Invalid input. Please provide the name of the player and the new number of assists."
-            client_sock.send(response.encode('utf-8'))
+                response5 = "Invalid input. Please provide the name of the player and the new number of assists."
+            client_sock.send(response5.encode('utf-8'))
         # Find player by ID
         elif request.startswith("find_player"):
             try:
                 _, player_id = request.split("-")
                 player = get_player_by_id(player_id)
                 if player:
-                    response = f"Player {player.name} found in the database"
+                    response6 = f"Player {player.name} found in the database"
                 else:
-                    response = f"Player with ID {player_id} not found in the database"
+                    response6 = f"Player with ID {player_id} not found in the database"
             except:
-                response = "Invalid input. Please provide the ID of the player to find."
-            client_sock.send(response.encode('utf-8'))
+                response6 = "Invalid input. Please provide the ID of the player to find."
+            client_sock.send(response6.encode('utf-8'))
         # Transfer player to new team
         elif request.startswith("transfer_player"):
             try:
                 _, name, new_team = request.split("-")
-                transfer_player(name, new_team)
-                response = f"Player {name} has been transferred to {new_team}"
+                response7 = transfer_player(name, new_team)
             except:
-                response = "Invalid input. Please provide the name of the player and the name of the new team."
-            client_sock.send(response.encode('utf-8'))
+                response7 = "Invalid input. Please provide the name of the player and the name of the new team."
+            client_sock.send(response7.encode('utf-8'))
         # Get total goals involvement of a player
         elif request.startswith("goals_involvement"):
             try:
                 _, name = request.split("-")
                 sum = get_goals_involvement(name)
-                response = f"{name} is involved in {sum} goals"
+                response8 = sum
             except:
-                response = "Invalid input. Please provide the ID of the player."
-            client_sock.send(response.encode('utf-8'))
+                response8 = "Invalid input. Please provide the ID of the player."
+            client_sock.send(response8.encode('utf-8'))
         #Get all players belong to this national
         elif request.startswith("get_squad_national"):
+            response9=None
             try:
                 _,nation = request.split("-")
                 result = get_squad_national(nation)
-                response = ""
-                for player in result:
-                    response += str(player) + "\n"
+                if result=="Nation not exist":
+                    result=result+"\n"
+                    client_sock.send(result.encode('utf-8'))
+                else:
+                    response9 = ""
+                    for player in result:
+                        response9 += str(player) + "\n"
             except:
-                response="No such nation"
-            client_sock.send(response.encode('utf-8'))
+                response9="No such nation"
+            if response9:
+                client_sock.send(response9.encode('utf-8'))
         #Get all players from the team
         elif request.startswith("get_squad_team"):
+            response10=None
             try:
                 _,team = request.split("-")
                 result = get_squad_team(team)
-                response = ""
-                for player in result:
-                    response += str(player) + "\n"
+                if result=="Team not exist":
+                    client_sock.send(result.encode('utf-8'))
+                else:
+                    response10 = ""
+                    for player in result:
+                        response10 += str(player) + "\n"
             except:
-                response="No such team"
-            client_sock.send(response.encode('utf-8'))
+                response10="No such team"
+            if response10:
+                client_sock.send(response10.encode('utf-8'))
         #Check if two players playing in the same team
         elif request.startswith("playing_together"):
             try:
                 _,p1,p2 = request.split("-")
-                response = playing_together(p1,p2)
+                response11 = playing_together(p1,p2)
             except:
-                response="No such player\s"
-            client_sock.send(response.encode('utf-8'))
+                response11="No such player\s"
+            client_sock.send(response11.encode('utf-8'))
         #Get all players by position
         elif request.startswith("get_all_players_by_position"):
+            response12=None
             try:
                 _, pos = request.split("-")
                 result = get_all_players_by_position(pos)
-                response = ""
-                for player in result:
-                    response += str(player) + "\n"
+                if result=="There is no such position":
+                    client_sock.send(result.encode('utf-8'))
+                else:
+                    response12 = ""
+                    for player in result:
+                        response12 += str(player) + "\n"
             except:
-                response = "No such position"
-            client_sock.send(response.encode('utf-8'))
+                response12 = "No such position"
+            if response12:
+                client_sock.send(response12.encode('utf-8'))
         #Get all players with more than X goals.
         elif request.startswith("get_players_by_goals"):
             try:
                 _, num = request.split("-")
                 result = get_players_by_goals(num)
-                response = ""
-                for player in result:
-                    response += str(player) + "\n"
+                if result:
+                    response13 = ""
+                    for player in result:
+                        response13 += str(player) + "\n"
+                else:
+                    response13 = "No such players"
             except:
-                response = "No such players"
-            client_sock.send(response.encode('utf-8'))
+                response13 = "No such players"
+            client_sock.send(response13.encode('utf-8'))
         elif request.startswith("exit"):
             print("TCP Server is disconnecting from the client")
             client_sock.close()
