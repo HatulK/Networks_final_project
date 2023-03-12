@@ -46,20 +46,25 @@ def send_Error(client_sock, error_message):
     client_sock.sendall(error.encode('utf-8'))
     print(f"Sent error message: {error}")
 
-
+# Define a function named "cdb"
 def cdb():
+    # Use the global keyword to reference the global variable "db_session"
     global db_session
+    # Create a database engine and connect to the database "tcp.db"
     engine = create_engine('sqlite:///tcp.db', echo=False)
+    # Create all the tables defined in the Base class, if they don't already exist
     Base.metadata.create_all(engine)
+    # Create a session object that will be used to interact with the database
     session = sessionmaker(bind=engine)
     db_session = session()
 
     db_session.query(Players).delete()
-
+    # Create a new player record and add it to the "Players" table
     c1 = Players(name="Oscar Gluch", team="Rbz", league="Austria BL", national="Israel", position="ATT",
                  goals=6,
                  assists=4)
     db_session.add(c1)
+    # Commit the changes made to the "Players" table
     db_session.commit()
 
     db_session.add_all(
@@ -115,7 +120,7 @@ def get_all():
     result = db_session.query(Players).all()
     return result
 
-
+# Insert a new player into the database
 def insert_player(name, team, league, national, position, goals, assists):
     global db_session
     new_player = Players(name=name, team=team, league=league, national=national, position=position, goals=goals,
@@ -125,7 +130,7 @@ def insert_player(name, team, league, national, position, goals, assists):
     print(f"Player {name} added to the database")
     return new_player
 
-#Delete by name
+# Delete a player from the database by their name
 def delete_player_by_name(name):
     global db_session
     player = db_session.query(Players).filter(Players.name.like(f'{name}%')).first()
@@ -227,6 +232,7 @@ def playing_together(p1, p2):
     else:
         return "Player 1 or/and 2 do not exist."
 
+# This function returns all the players in the database who play in a certain position
 def get_all_players_by_position(position):
     global db_session
     players = db_session.query(Players).filter(Players.position.like(f'{position}%')).all()
@@ -235,6 +241,7 @@ def get_all_players_by_position(position):
     else:
         return "There is no such position"
 
+# This function returns all the players in the database who have scored more than a certain number of goals
 def get_players_by_goals(number):
     global db_session
     players = db_session.query(Players).filter(Players.goals>=number).all()
